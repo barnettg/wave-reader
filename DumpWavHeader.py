@@ -4,26 +4,26 @@
 # prints variable with array size
 
 ## wave file header
-##Byte Number 	Size 	Description 	    Value
-##0-3 	        4 	Chunk ID 	    "RIFF" (0x52494646)
-##4-7 	        4 	Chunk Data Size     (file size) - 8
-##8-11 	        4 	RIFF Type 	    "WAVE" (0x57415645) 
+##Byte Number 	offset      Size 	Description 	    Value
+##0-3 	         0-3         4 	        Chunk ID 	    "RIFF" (0x52494646)
+##4-7 	         4-7         4 	        Chunk Data Size     (file size) - 8
+##8-11 	         8-11        4 	        RIFF Type 	    "WAVE" (0x57415645) 
 ##
 ##
-##Byte Number 	Size 	Description 	    Value
-##0-3 	        4 	Chunk ID 	    "fmt " (0x666D7420)
-##4-7 	        4 	Chunk Data Size     Length Of format Chunk (always 0x10)
-##8-9 	        2 	Compression code    Always 0x01
-##10 - 11 	2 	Channel Numbers     0x01=Mono, 0x02=Stereo
-##12 - 15 	4 	Sample Rate 	    Binary, in Hz
-##16 - 19 	4 	Bytes Per Second 	 
-##20 - 21 	2 	Bytes Per Sample    1=8 bit Mono, 2=8 bit Stereo or 16 bit Mono, 4=16 bit Stereo
-##22 - 23 	2 	Bits Per Sample 	 
+##Byte Number 	            Size 	Description 	    Value
+##0-3 	        12-15       4 	        Chunk ID 	    "fmt " (0x666D7420)
+##4-7 	        16-19       4 	        Chunk Data Size     Length Of format Chunk (always 0x10)
+##8-9 	        20-21       2 	        Compression code    Always 0x01
+##10 - 11 	22-23       2 	        Channel Numbers     0x01=Mono, 0x02=Stereo
+##12 - 15 	24-27       4 	        Sample Rate 	    Binary, in Hz
+##16 - 19 	28-31       4 	        Bytes Per Second 	 
+##20 - 21 	32-33       2 	        Bytes Per Sample    1=8 bit Mono, 2=8 bit Stereo or 16 bit Mono, 4=16 bit Stereo
+##22 - 23 	34-35       2 	        Bits Per Sample 	 
 ##
-##Byte Number 	Size 	Description 	    Value
-##0-3 	        4 	Chunk ID 	    "data" (0x64617461)
-##4-7 	        4 	Chunk Data Size     length of data to follow
-##8-end 	  	Data 	            sound samples
+##Byte Number 	            Size 	Description 	    Value
+##0-3 	        36-39       4 	        Chunk ID 	    "data" (0x64617461)
+##4-7 	        40-43       4 	        Chunk Data Size     length of data to follow
+##8-end 	44-end	                Data 	            sound samples
   	  	  	 
 
 class waveFile:
@@ -34,8 +34,45 @@ class waveFile:
 
     def verifyHeader(self):
         reply = True
+        if chr(self.btArray[0]) == 'R' and chr(self.btArray[1]) == 'I' and \
+            chr(self.btArray[2]) == 'F' and chr(self.btArray[3]) == 'F':
+            print ("RIFF OK")
+        else:
+            print ("RIFF error")
+            reply = False
+
+        if chr(self.btArray[8]) == 'W' and chr(self.btArray[9]) == 'A' and \
+            chr(self.btArray[10]) == 'V' and chr(self.btArray[11]) == 'E':
+            print ("WAVE OK")
+        else:
+            print ("WAVE error")
+            reply = False
+
+        sampleRate = self.btArray[27] 
+        sampleRate = sampleRate << 8
+        sampleRate = sampleRate + self.btArray[26]
+        sampleRate = sampleRate << 8
+        sampleRate = sampleRate + self.btArray[25]
+        sampleRate = sampleRate << 8
+        sampleRate = sampleRate + self.btArray[24] 
+
+        print ("Sample rate %d HZ"%sampleRate)
+
+        dataSize = self.btArray[43] 
+        dataSize = dataSize << 8
+        dataSize = dataSize + self.btArray[42]
+        dataSize = dataSize << 8
+        dataSize = dataSize + self.btArray[41]
+        dataSize = dataSize << 8
+        dataSize = dataSize + self.btArray[40]
+        self.btArrayLength = dataSize
+
+        print ("data size %d bytes"%dataSize)
+
+        self.btArray = self.btArray[44:]
 
         
+        #return False # temporary for faster dev
         return reply
 
     def getWavFile(self):
